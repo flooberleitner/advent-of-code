@@ -36,5 +36,5 @@ File.open('puzzle02_input.txt') do |input|
   end
 end
 
-puts 'Paper needed: ' + packets.reduce(0) { |a, e| a + e.paper_needed }.to_s
-puts 'Ribbon needed: ' + packets.reduce(0) { |a, e| a + e.ribbon_needed }.to_s
+puts "Puzzle02 Pt01: Paper needed: #{packets.map(&:paper_needed).reduce(:+)}"
+puts "Puzzle02 Pt02: Ribbon needed: #{packets.map(&:ribbon_needed).reduce(:+)}"
