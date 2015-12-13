@@ -7,7 +7,7 @@ opts = Trollop.options do
   opt :input, 'Path to input data', type: String
 end
 Trollop.die :input, 'required' unless opts[:input]
-Trollop.die :input, 'does not exists' unless File.exist?(opts[:input])
+Trollop.die :input, 'does not exist' unless File.exist?(opts[:input])
 
 instruction_pattern = /^(?<cmd>turn|toggle)? (?<sub>on|off)? ?(?<from_x>\d{1,3}),(?<from_y>\d{1,3}) through (?<to_x>\d{1,3}),(?<to_y>\d{1,3})$/
 

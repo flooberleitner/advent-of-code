@@ -7,7 +7,7 @@ opts = Trollop.options do
   opt :input, 'Path to input data', type: String
 end
 Trollop.die :input, 'required' unless opts[:input]
-Trollop.die :input, 'does not exists' unless File.exist?(opts[:input])
+Trollop.die :input, 'does not exist' unless File.exist?(opts[:input])
 
 #########################################
 
