@@ -39,7 +39,7 @@ end
 
 lines = File.readlines(opts[:input])
 
-puts "Puzzle12: Pt01: #{lines[0].aoc_sum}"
+puts "Puzzle12: Pt01: #{lines.map(&:aoc_sum).reduce(:+)}"
 
-data = JSON.parse(lines[0])
+data = JSON.parse(lines.join)
 puts "Puzzle12: Pt02: #{data.aoc_sum}"
