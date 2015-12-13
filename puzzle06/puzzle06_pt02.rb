@@ -7,19 +7,15 @@ opts = Trollop.options do
   opt :input, 'Path to input data', type: String
 end
 Trollop.die :input, 'required' unless opts[:input]
-Trollop.die :input, 'does not exist' unless File.exist?(opts[:input])
+Trollop.die :input, 'does not exists' unless File.exist?(opts[:input])
 
 instruction_pattern = /^(?<cmd>turn|toggle)? (?<sub>on|off)? ?(?<from_x>\d{1,3}),(?<from_y>\d{1,3}) through (?<to_x>\d{1,3}),(?<to_y>\d{1,3})$/
 
 class Lights
-  def initialize(width, heigth)
-    @lights = {}
-    (0...width).each do |x|
-      @lights[x] = {}
-      (0...heigth).each do |y|
-        @lights[x][y] = 0
-      end
-    end
+  def initialize(width, height)
+    @width = width
+    @height = height
+    @lights = Array.new(width * height, 0)
   end
 
   def render(cmd, sub, from_x, from_y, to_x, to_y)
@@ -42,30 +38,27 @@ class Lights
   end
 
   def turn(x, y, sub)
+    light = light_offset(x, y)
     case sub
     when :on
-      @lights[x][y] += 1
+      @lights[light] += 1
     when :off
-      @lights[x][y] -= 1 unless @lights[x][y] == 0
+      @lights[light] -= 1 unless @lights[light] == 0
     else
       fail ArgumentError, "Unknonw sub-command '#{sub}'"
     end
   end
 
   def toggle(x, y)
-    @lights[x][y] += 2
+    @lights[light_offset(x, y)] += 2
+  end
+
+  def light_offset(x, y)
+    x * @width + y
   end
 
   def total_brightness
-    @lights.map { |e| e[1].values }.flatten.reduce(:+)
-  end
-
-  def inspect
-    @lights.inspect
-  end
-
-  def to_s
-    inspect
+    @lights.reduce(:+)
   end
 end
 
