@@ -16,7 +16,7 @@ Trollop.die :input, 'does not exists' unless File.exist?(opts[:input])
 seating_points_pattern = /(?<who>\w+) would (?<type>gain|lose) (?<points>\d+) happiness units by sitting next to (?<next_to_whom>\w+)/
 
 def get_chains(persons)
-  persons.values.first.possible_chains
+  persons.values.first.paths
 end
 
 def calc_points_for_chains(chains)
@@ -24,14 +24,14 @@ def calc_points_for_chains(chains)
     points = 0
     (0..chain.size - 2).each do |offset|
       # add points in chain from front to back
-      points += chain[offset].edge_value_for(chain[offset + 1])
+      points += chain[offset].edge_to(chain[offset + 1])
       # add points in chain from back to front
-      points += chain[-1 - offset].edge_value_for(chain[-2 - offset])
+      points += chain[-1 - offset].edge_to(chain[-2 - offset])
     end
     # add points for wraparound front to back
-    points += chain.first.edge_value_for(chain.last)
+    points += chain.first.edge_to(chain.last)
     # add points for wraparound back to front
-    points += chain.last.edge_value_for(chain.first)
+    points += chain.last.edge_to(chain.first)
   end
 end
 

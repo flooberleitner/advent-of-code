@@ -36,7 +36,7 @@ end
 puts 'Get all paths for all nodes...'
 # Get all valid paths starting from each node
 paths = nodes.values.each_with_object([]) do |node, memo|
-  node.possible_chains.each do |path|
+  node.paths.each do |path|
     memo << path if path.size == nodes.size
   end
 end
@@ -45,7 +45,7 @@ puts 'Calculating lengths of each path...'
 lengths =  paths.map do |path|
   length = 0
   (0..path.size - 2).each do |index|
-    length += path[index].edge_value_for(path[index + 1])
+    length += path[index].edge_to(path[index + 1])
   end
   length
 end
