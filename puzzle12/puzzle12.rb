@@ -4,7 +4,7 @@ require 'trollop'
 require 'json'
 
 opts = Trollop.options do
-  version 'AoC:Puzzle08, (c) Florian Oberleitner (florian.oberleitner@gmail.com)'
+  version 'AoC:Puzzle12, (c) Florian Oberleitner (florian.oberleitner@gmail.com)'
   opt :input, 'Path to input data', type: String
 end
 Trollop.die :input, 'required' unless opts[:input]
