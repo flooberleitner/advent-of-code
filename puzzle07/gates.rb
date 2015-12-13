@@ -60,8 +60,8 @@ module Gates
     end
   end
 
-  class Output < Basic
-    def input=(value)
+  class Value < Basic
+    def output=(value)
       return if value == @output
       @output = value
       notify_observers

@@ -9,7 +9,7 @@ opts = Trollop.options do
   opt :input, 'Path to input data', type: String
 end
 Trollop.die :input, 'required' unless opts[:input]
-Trollop.die :input, 'does not exists' unless File.exist?(opts[:input])
+Trollop.die :input, 'does not exist' unless File.exist?(opts[:input])
 
 #########################################
 
@@ -43,22 +43,22 @@ instructions.each do |inst|
   end
 end
 
-puts 'Adding inputs...'
+puts 'Adding input values...'
 instructions.each do |inst|
-  inputs = []
+  values = []
   if op_pattern.match(inst)
-    inputs << Regexp.last_match[:inp1]
-    inputs << Regexp.last_match[:inp2]
+    values << Regexp.last_match[:inp1]
+    values << Regexp.last_match[:inp2]
   elsif forward_pattern.match(inst)
-    inputs << Regexp.last_match[:inp]
+    values << Regexp.last_match[:inp]
   else
     fail "No pattern matched for '#{inst}'"
   end
 
-  inputs.each do |inp|
-    break unless /\d+/.match(inp)
-    gates[inp] = Gates::Output.new(inp) unless gates.key?(inp)
-    gates[inp].input = inp.to_i
+  values.each do |val|
+    break unless /\d+/.match(val)
+    gates[val] = Gates::Value.new(val) unless gates.key?(val)
+    gates[val].output = val.to_i
   end
 end
 
@@ -111,8 +111,8 @@ puts '----------------------------------------'
 puts 'Reassigning inputs for part 2'
 
 val_a = gates['a'].output.to_s
-gates[val_a] = Gates::Output.new(val_a)
-gates[val_a].input = val_a.to_i
+gates[val_a] = Gates::Value.new(val_a)
+gates[val_a].output = val_a.to_i
 gate_b = gates['b']
 gate_b.input = gates[val_a]
 gate_b.inputs_stable
