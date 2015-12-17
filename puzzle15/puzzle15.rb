@@ -22,7 +22,35 @@ class Ingredient
     @texture = texture.to_i
     @calories = calories.to_i
   end
-  attr_reader :capacity, :durability, :flavor, :texture, :calories
+  attr_reader :name, :capacity, :durability, :flavor, :texture, :calories
+
+  def mixtures(overall_igredients,
+    used_ingredients = [],
+    total_amount = 0,
+    previous_mixture = { cap: 0, dur: 0, fla: 0, tex: 0, cal: 0 })
+
+    used_ingredients << self
+    all_mixtures = (1..(100 - total_amount)).each_with_object([]) do |amount, mixtures|
+      mixture = previous_mixture.clone
+      mixture[:cap] += @capacity * amount
+      mixture[:dur] += @durability * amount
+      mixture[:fla] += @flavor * amount
+      mixture[:tex] += @texture * amount
+      mixture[:cal] += @calories * amount
+      remaining_ingredients = overall_igredients - used_ingredients
+      if remaining_ingredients.empty?
+        mixtures << mixture
+      else
+        mixtures << remaining_ingredients.first.mixtures(
+          overall_igredients,
+          used_ingredients.clone << self,
+          total_amount + amount,
+          mixture).flatten
+      end
+    end
+    used_ingredients.delete(self)
+    all_mixtures.flatten
+  end
 end
 
 ingredients = File.readlines(opts[:input]).map do |line|
@@ -31,24 +59,12 @@ ingredients = File.readlines(opts[:input]).map do |line|
   Ingredient.new(m[:name], m[:capacity], m[:durability], m[:flavor], m[:texture], m[:calories])
 end
 
-# create all valid combos
-# TODO: needs to be sped up
-possible_amounts = *(1..(101 - ingredients.size))
-all_combos = possible_amounts.repeated_permutation(ingredients.size)
-valid_combos = all_combos.select { |combo| combo.reduce(:+) == 100 }
+all_mixtures = ingredients.first.mixtures(ingredients)
 
-scores = valid_combos.each_with_object({ part1: [], part2: [] }) do |combo, memo|
-  vals = Array.new(5, 0)
-  combo.each_with_index do |amount, index|
-    vals[0] += ingredients[index].capacity * amount
-    vals[1] += ingredients[index].durability * amount
-    vals[2] += ingredients[index].flavor * amount
-    vals[3] += ingredients[index].texture * amount
-    vals[4] += ingredients[index].calories * amount
-  end
-  score = vals[0..3].map { |val| val < 0 ? 0 : val }.reduce(:*)
+scores = all_mixtures.each_with_object({ part1: [], part2: [] }) do |mixture, memo|
+  score = mixture.values[0..3].map { |val| val < 0 ? 0 : val }.reduce(:*)
   memo[:part1] << score
-  memo[:part2] << score if vals[4] == 500
+  memo[:part2] << score if mixture[:cal] == 500
 end
 
 puts "Puzzle15: Part1: max score=#{scores[:part1].max}"
