@@ -3,18 +3,24 @@
 class LoginHandler
   COL = 0
   ROW = 1
-
+  DIR_MAP = {
+    'L' => :step_finger_left,
+    'R' => :step_finger_right,
+    'U' => :step_finger_up,
+    'D' => :step_finger_down
+  }.freeze
   attr_reader :code
 
-  def initialize(data:, pad:, finger_at:)
+  def initialize(data:, pad:, finger_at:, no_key:)
     @pad = pad
     @code = ''
     @finger = finger_at # [column, row]
     @col_max = @pad[0].size - 1
     @row_max = @pad.size - 1
+    @no_key = no_key
 
     data.readlines.each do |line|
-      move_and_press(line)
+      move_and_press(line.rstrip)
     end
   end
 
@@ -28,35 +34,30 @@ class LoginHandler
   end
 
   def step_finger(dir)
-    case dir
-    when 'L' then step_finger_left
-    when 'R' then step_finger_right
-    when 'U' then step_finger_up
-    when 'D' then step_finger_down
-    end
+    send(DIR_MAP[dir])
   end
 
   def step_finger_left
     return if @finger[COL].zero? ||
-              value_at_finger(col: @finger[COL] - 1) == ' '
+              value_at_finger(col: @finger[COL] - 1) == @no_key
     @finger[COL] -= 1
   end
 
   def step_finger_right
     return if @finger[COL] == @col_max ||
-              value_at_finger(col: @finger[COL] + 1) == ' '
+              value_at_finger(col: @finger[COL] + 1) == @no_key
     @finger[COL] += 1
   end
 
   def step_finger_up
     return if @finger[ROW].zero? ||
-              value_at_finger(row: @finger[ROW] - 1) == ' '
+              value_at_finger(row: @finger[ROW] - 1) == @no_key
     @finger[ROW] -= 1
   end
 
   def step_finger_down
     return if @finger[ROW] == @row_max ||
-              value_at_finger(row: @finger[ROW] + 1) == ' '
+              value_at_finger(row: @finger[ROW] + 1) == @no_key
     @finger[ROW] += 1
   end
 
@@ -71,7 +72,12 @@ class LoginHandler
   end
 end
 
-open('puzzle02_input.txt') do |file|
+if ARGV.size.zero?
+  puts 'Please provide path to input file'
+  exit 1
+end
+
+open(ARGV[0]) do |file|
   login1 = LoginHandler.new(
     data: file,
     pad: [
@@ -79,6 +85,7 @@ open('puzzle02_input.txt') do |file|
       '456 ',
       '789 '
     ],
+    no_key: ' ',
     finger_at: [1, 1]
   )
   puts "Login Step1: #{login1.code}"
@@ -93,6 +100,7 @@ open('puzzle02_input.txt') do |file|
       ' ABC ',
       '  D  '
     ],
+    no_key: ' ',
     finger_at: [2, 2]
   )
   puts "Login Step2: #{login2.code}"
