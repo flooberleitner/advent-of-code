@@ -4,7 +4,7 @@ module Effect
       @value = value
       @duration = duration
     end
-    attr_reader :value
+    attr_reader :value, :name
     attr_accessor :duration
   end
 
