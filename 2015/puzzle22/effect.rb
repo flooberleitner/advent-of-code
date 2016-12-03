@@ -1,10 +1,11 @@
-module Effects
+module Effect
   class Base
     def initialize(value: 0, duration: 0)
       @value = value
       @duration = duration
     end
-    attr_reader :value, :duration
+    attr_reader :value
+    attr_accessor :duration
   end
 
   class Damage < Base
