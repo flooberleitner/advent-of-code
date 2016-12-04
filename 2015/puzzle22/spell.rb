@@ -41,6 +41,10 @@ module Spells
     )
   ]
 
+  @spells = @spells.each_with_object({}) do |spell, memo|
+    memo[spell.name] = spell
+  end
+
   class << self
     def available_spells
       @spells

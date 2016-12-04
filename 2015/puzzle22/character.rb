@@ -12,72 +12,36 @@ class Character
     @mana = mana
     @spells = spells
     @spell_sequence = spell_sequence
-
     @spell_armor = 0
     @total_costs = 0
     @active_effects = []
+    @rng = Random.new
   end
-  attr_reader :name, :health, :hit_points, :armor, :mana, :total_costs, :active_effects
-
-  def attack(opponent)
-    if dead?
-      MyLogger.log.info("'#{@name}' can not attack '#{opponent.name}'" \
-                        " because '#{@name}' is dead.")
-      return
-    end
-    MyLogger.log.debug("'#{@name}' attack '#{opponent.name}'")
-    opponent.attacked_by(self)
-  end
+  attr_reader :name, :health, :hit_points, :mana, :total_costs, :active_effects
 
   def start_round
     MyLogger.log.info("Starting round for '#{@name}'")
     apply_effects
-    fade_effects
     clear_faded_effects
   end
 
-  private def apply_effects
-    MyLogger.log.debug("Applying effects for '#{@name}'")
-    @active_effects.each do |effect|
-      MyLogger.log.debug("  #{effect.class}")
-      heal(effect.value) if effect.is_a?(Effect::Healing)
-      injure(effect.value) if effect.is_a?(Effect::Damage)
-      replenish(effect.value) if effect.is_a?(Effect::ManaRegen)
-    end
-  end
-
-  private def fade_effects
-    MyLogger.log.debug("Fading effects for '#{@name}'")
-    @active_effects.each do |effect|
-      MyLogger.log.debug("  '#{effect.class}': duration left = #{effect.duration}")
-      effect.duration -= 1
-    end
-  end
-
-  private def clear_faded_effects
-    MyLogger.log.debug("Clearing fading effects for '#{@name}'")
-    @active_effects = @active_effects.delete_if do |effect|
-      del = effect.duration <= 0
-      @spell_armor -= effect.value if del && effect.is_a?(Effect::Armor)
-      MyLogger.log.debug("  '#{effect.class}' cleared") if del
-      del
-    end
+  def end_round
+    # MyLogger.log.info("Ending round for '#{@name}'")
   end
 
   def cast_spell_on(opponent)
     if dead?
-      MyLogger.log.info("'#{@name}' can not cast spell on '#{opponent.name}'" \
+      MyLogger.log.warn("'#{@name}' can not cast spell on '#{opponent.name}'" \
                         " because '#{@name}' is dead.")
       return
     end
     MyLogger.log.debug("'#{@name}' cast spell on '#{opponent.name}'")
 
-    if @spell_sequence && !@spell_sequence.empty?
-      name = @spell_sequence.delete_at(0)
-      spell = @spells.select { |s| s.name == name }[0]
-    else
-      spell = choose_spell(opponent)
-    end
+    spell = if @spell_sequence && !@spell_sequence.empty?
+              @spells[@spell_sequence.delete_at(0)]
+            else
+              choose_spell(opponent)
+            end
     return unless spell
 
     MyLogger.log.debug("Got spell '#{spell.name}'")
@@ -90,42 +54,9 @@ class Character
     spell.opponent_effects.each { |effect| opponent.add_effect(effect) }
   end
 
-  private def choose_spell(opponent)
-    MyLogger.log.debug('Choose spell')
-    @spells.select do |spell|
-      MyLogger.log.debug("Checking spell '#{spell.name}'")
-      keep = spell.costs <= @mana ? true : false
-      MyLogger.log.debug("  #{keep ? 'Can' : 'Can\'t'} afford it (mana:#{@mana}, costs:#{spell.costs}")
-
-      if keep && !@active_effects.empty? && !spell.my_effects.empty?
-        MyLogger.log.debug('  Checking for my effects')
-        spell_my_effect_classes = spell.my_effects.map(&:class)
-        my_active_effect_classes = @active_effects.map(&:class)
-        MyLogger.log.debug("    from spell: #{spell_my_effect_classes}")
-        MyLogger.log.debug("     my active: #{my_active_effect_classes}")
-        keep = spell_my_effect_classes.none? do |c|
-          my_active_effect_classes.include?(c)
-        end
-      end
-
-      if keep && !opponent.active_effects.empty? && !spell.opponent_effects.empty?
-        MyLogger.log.debug('  Checking for opponent effects')
-        spell_opp_effect_classes = spell.opponent_effects.map(&:class)
-        opp_active_effect_classes = opponent.active_effects.map(&:class)
-        MyLogger.log.debug("    from spell: #{spell_opp_effect_classes}")
-        MyLogger.log.debug("    opp active: #{opp_active_effect_classes}")
-        keep = spell_opp_effect_classes.none? do |c|
-          opp_active_effect_classes.include?(c)
-        end
-      end
-      MyLogger.log.debug("  #{keep ? 'Keep' : 'Drop'} '#{spell.name}'")
-      keep
-    end.sample
-  end
-
   def add_effect(effect)
     MyLogger.log.debug("Adding effect to '#{@name}'")
-    if effect.duration.zero?
+    if effect.one_time?
       MyLogger.log.debug("   '#{effect.class}' with immediate effect")
       heal(effect.value) if effect.is_a?(Effect::Healing)
       injure(effect.value) if effect.is_a?(Effect::Damage)
@@ -135,6 +66,98 @@ class Character
       @active_effects << effect.dup
       @spell_armor += effect.value if effect.is_a?(Effect::Armor)
     end
+  end
+
+  def attack(opponent)
+    if dead?
+      MyLogger.log.warn("'#{@name}' can not attack '#{opponent.name}'" \
+                        " because '#{@name}' is dead.")
+      return
+    end
+    MyLogger.log.debug("'#{@name}' attack '#{opponent.name}'")
+    opponent.attacked_by(self)
+  end
+
+  def attacked_by(opponent)
+    hit_points = opponent.hit_points - @armor - @spell_armor
+    hit_points = 1 unless hit_points > 0
+    injure(hit_points)
+  end
+
+  def alive?
+    @health > 0
+  end
+
+  def dead?
+    !alive?
+  end
+
+  def armor
+    @armor + @spell_armor
+  end
+
+  private def apply_effects
+    MyLogger.log.debug("Applying effects for '#{@name}'")
+    @active_effects.each do |effect|
+      MyLogger.log.debug("  #{effect.class}")
+      heal(effect.value_to_apply) if effect.is_a?(Effect::Healing)
+      injure(effect.value_to_apply) if effect.is_a?(Effect::Damage)
+      replenish(effect.value_to_apply) if effect.is_a?(Effect::ManaRegen)
+      effect.fade
+      MyLogger.log.debug("  '#{effect.class}': duration left = #{effect.duration}")
+    end
+  end
+
+  private def clear_faded_effects
+    MyLogger.log.debug("Clearing faded effects for '#{@name}'")
+    @active_effects = @active_effects.delete_if do |effect|
+      del = effect.faded?
+      @spell_armor -= effect.value if del && effect.is_a?(Effect::Armor)
+      MyLogger.log.debug("  '#{effect.class}' cleared") if del
+      del
+    end
+  end
+
+  private def choose_spell(opponent)
+    MyLogger.log.debug('Choose spell')
+
+    available_spells = @spells.select do |name, spell|
+      MyLogger.log.debug("  Checking spell '#{name}'")
+      keep = spell.costs <= @mana ? true : false
+      MyLogger.log.debug("    #{keep ? 'Can' : 'Can\'t'} afford it (mana:#{@mana}, costs:#{spell.costs})")
+
+      if keep && !@active_effects.empty? && !spell.my_effects.empty?
+        MyLogger.log.debug('    Checking for my effects')
+        spell_my_effect_classes = spell.my_effects.map(&:class)
+        my_active_effect_classes = @active_effects.map(&:class)
+        MyLogger.log.debug("      from spell: #{spell_my_effect_classes}")
+        MyLogger.log.debug("       my active: #{my_active_effect_classes}")
+        keep = spell_my_effect_classes.none? do |c|
+          my_active_effect_classes.include?(c)
+        end
+      end
+
+      if keep && !opponent.active_effects.empty? && !spell.opponent_effects.empty?
+        MyLogger.log.debug('    Checking for opponent effects')
+        spell_opp_effect_classes = spell.opponent_effects.map(&:class)
+        opp_active_effect_classes = opponent.active_effects.map(&:class)
+        MyLogger.log.debug("      from spell: #{spell_opp_effect_classes}")
+        MyLogger.log.debug("      opp active: #{opp_active_effect_classes}")
+        keep = spell_opp_effect_classes.none? do |c|
+          opp_active_effect_classes.include?(c)
+        end
+      end
+      MyLogger.log.debug("  #{keep ? 'Keep' : 'Drop'} '#{spell.name}'")
+      keep
+    end
+
+    # preferse some spells as pure random seems to not lead to the right
+    # result in reasonable time
+    # return available_spells[:recharge] if available_spells.include?(:recharge)
+    # return available_spells[:shield] if available_spells.include?(:shield)
+    # return available_spells[:drain] if available_spells.include?(:drain)
+    return nil if available_spells.empty?
+    available_spells[available_spells.keys.sample(random: @rng)]
   end
 
   private def heal(value)
@@ -157,19 +180,5 @@ class Character
     MyLogger.log.debug("Deplete mana of '#{@name}' with #{value}")
     @mana -= value
     @mana = 0 if @mana < 0
-  end
-
-  def alive?
-    @health > 0
-  end
-
-  def dead?
-    !alive?
-  end
-
-  def attacked_by(opponent)
-    hit_points = opponent.hit_points - @armor - @spell_armor
-    hit_points = 1 unless hit_points > 0
-    injure(hit_points)
   end
 end

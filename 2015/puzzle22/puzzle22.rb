@@ -15,19 +15,26 @@ class Game
   attr_reader :round
 
   def play
+    MyLogger.log.debug("\n===== Starting Game =====\n")
     @round = 1
     while @boss.alive? && @player.alive?
-      MyLogger.log.info("Starting Round #{@round} (player:#{@player.health}, boss:#{@boss.health})")
+      MyLogger.log.debug("Starting Round #{@round} (player:#{@player.health}/#{@player.armor}/#{@player.mana}, boss:#{@boss.health})")
       @boss.start_round
       @player.start_round
 
       @player.cast_spell_on(@boss) if @round.odd?
       @boss.attack(@player) if @round.even?
 
-      @round += 1
+      @boss.end_round
+      @player.end_round
 
-      MyLogger.log.debug("Round #{@round}: boss.dead?=#{@boss.dead?}, player.dead?=#{@player.dead?}")
-      break if @player.total_costs >= @max_costs
+      MyLogger.log.debug("Ending Round #{@round} (player:#{@player.health}/#{@player.armor}/#{@player.mana}, boss:#{@boss.health})\n")
+
+      if @player.total_costs >= @max_costs
+        MyLogger.log.debug("  Break play because costs exceeded (#{@player.total_costs} >= #{@max_costs})")
+        break
+      end
+      @round += 1
     end
   end
 
@@ -38,7 +45,13 @@ class Game
   def player_won?
     @player.alive? && @boss.dead?
   end
+
+  def draw?
+    (@player.alive? && @boss.alive?) || (@player.dead? && @boss.dead?)
+  end
 end
+
+MyLogger.log.level = MyLogger::WARN
 
 game = Game.new(
   boss: Character.new(
@@ -77,11 +90,16 @@ game.play
 puts "Puzzle22 - Example2: costs: #{game.costs}, player_won: #{game.player_won?}"
 puts game.player_won?
 
+MyLogger.log.level = MyLogger::WARN
+
 minimum_costs = 1_000_000
 round_achieved = 0
-# 1_000_000.times do |i|
-0.times do |i|
-  print "\n#{i}(#{minimum_costs} @#{round_achieved})" if (i % 10_000).zero?
+round_count = 0
+won = 0
+lost = 0
+draw = 0
+100_000.times do |i|
+  print "\n#{i}(#{minimum_costs}(#{round_count}), won:#{won}, lost:#{lost}, draw:#{draw})" if (i % 10_000).zero?
   print '.' if (i % 1000).zero?
   game = Game.new(
     boss: Character.new(
@@ -100,7 +118,11 @@ round_achieved = 0
   game.play
   if game.player_won? && game.costs < minimum_costs
     minimum_costs = game.costs
-    round_achieved = game.round
+    round_achieved = i
+    round_count = game.round
   end
+  won += 1 if game.player_won?
+  lost += 1 unless game.player_won?
+  draw += 1 if game.draw?
 end
-puts "\nPuzzle22 Step1: MinCosts: #{minimum_costs} in round #{round_achieved}"
+puts "\nPuzzle22 Step1: MinCosts: #{minimum_costs}(#{round_count}), won:#{won}, lost:#{lost}, draw:#{draw}"
