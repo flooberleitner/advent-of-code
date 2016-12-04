@@ -12,13 +12,13 @@ class Game
     @max_costs = max_costs
     @round = 0
   end
-  attr_reader :round
+  attr_reader :round, :player
 
   def play
-    MyLogger.log.debug("\n===== Starting Game =====\n")
+    MyLogger.log.debug("\n===== Starting Game =====\n") if MyLogger.log?
     @round = 1
     while @boss.alive? && @player.alive?
-      MyLogger.log.debug("Starting Round #{@round} (player:#{@player.health}/#{@player.armor}/#{@player.mana}, boss:#{@boss.health})")
+      MyLogger.log.debug("Starting Round #{@round} (player:#{@player.health}/#{@player.armor}/#{@player.mana}, boss:#{@boss.health})") if MyLogger.log?
       @boss.start_round
       @player.start_round
 
@@ -28,10 +28,10 @@ class Game
       @boss.end_round
       @player.end_round
 
-      MyLogger.log.debug("Ending Round #{@round} (player:#{@player.health}/#{@player.armor}/#{@player.mana}, boss:#{@boss.health})\n")
+      MyLogger.log.debug("Ending Round #{@round} (player:#{@player.health}/#{@player.armor}/#{@player.mana}, boss:#{@boss.health})\n") if MyLogger.log?
 
       if @player.total_costs >= @max_costs
-        MyLogger.log.debug("  Break play because costs exceeded (#{@player.total_costs} >= #{@max_costs})")
+        MyLogger.log.debug("  Break play because costs exceeded (#{@player.total_costs} >= #{@max_costs})") if MyLogger.log?
         break
       end
       @round += 1
@@ -90,7 +90,7 @@ game.play
 puts "Puzzle22 - Example2: costs: #{game.costs}, player_won: #{game.player_won?}"
 puts game.player_won?
 
-MyLogger.log.level = MyLogger::WARN
+MyLogger.log.level = MyLogger::INFO
 
 minimum_costs = 1_000_000
 round_achieved = 0
@@ -98,8 +98,8 @@ round_count = 0
 won = 0
 lost = 0
 draw = 0
-100_000.times do |i|
-  print "\n#{i}(#{minimum_costs}(#{round_count}), won:#{won}, lost:#{lost}, draw:#{draw})" if (i % 10_000).zero?
+1_000_000.times do |i|
+  print "\n#{i}(#{minimum_costs}(#{round_achieved}), won:#{won}, lost:#{lost}, draw:#{draw})" if (i % 10_000).zero?
   print '.' if (i % 1000).zero?
   game = Game.new(
     boss: Character.new(
@@ -124,5 +124,7 @@ draw = 0
   won += 1 if game.player_won?
   lost += 1 unless game.player_won?
   draw += 1 if game.draw?
+
+  MyLogger.log.info("Round #{i}: Won with spells: #{game.player.spells_casted.inspect}") if game.player_won?
 end
 puts "\nPuzzle22 Step1: MinCosts: #{minimum_costs}(#{round_count}), won:#{won}, lost:#{lost}, draw:#{draw}"

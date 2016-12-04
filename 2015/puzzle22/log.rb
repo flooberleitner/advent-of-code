@@ -12,5 +12,9 @@ module MyLogger
         log.level = Logger::WARN
       end
     end
+
+    @drop_it_like_its_hot = true
+    def log?
+    end
   end
 end
