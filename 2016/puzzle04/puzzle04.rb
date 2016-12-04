@@ -23,14 +23,13 @@ open(ARGV[0]) do |file|
                  .split('') # we want to iterate over each single char
                  .each_with_object(Hash.new(0)) do |char, memo|
                    memo[char] += 1 # each char is the key to it's count
-                 end # next sort the hash by count values
-                 .sort_by(&:last) # -> [['a' => 3], ['c' => 5], ...]
-                 .reverse # but we want the most used chars first
-                 .each_with_object(Hash.new('')) do |map, memo|
-                   memo[map[1]] += map[0]
-                 end # for each count we have the chars in decending order but
-                 .values # entries with multiple chars need to be sorted
-                 .map { |chars| chars.split('').sort.join } # alphabetically and
+                 end # next combine single chars with same count
+                 .each_with_object(Hash.new('')) do |(char, cnt), memo|
+                   memo[cnt] += char
+                 end # next sort everything accoring to count
+                 .sort_by(&:first) # -> [[1, 'd'], [3, 'za'], ...]
+                 .reverse # but we want the most used chars first, sort them
+                 .map { |m| m[1].split('').sort.join } # alphabetically and
                  .join[0..4] # joined together for the checksum (first 5 chars)
       if match[:checksum] == checksum
         sec_id = match[:sector_id].to_i
