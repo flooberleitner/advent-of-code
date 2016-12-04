@@ -20,7 +20,7 @@ open(ARGV[0]) do |file|
     line.match(pattern) do |match|
       checksum = match[:room]
                  .tr('-', '') # dashes not need
-                 .split('') # we want to iterate over each single char
+                 .chars # we want to iterate over each single char
                  .each_with_object(Hash.new(0)) do |char, memo|
                    memo[char] += 1 # each char is the key to it's count
                  end # next combine single chars with same count
@@ -29,7 +29,7 @@ open(ARGV[0]) do |file|
                  end # next sort everything accoring to count
                  .sort_by(&:first) # -> [[1, 'd'], [3, 'za'], ...]
                  .reverse # but we want the most used chars first, sort them
-                 .map { |m| m[1].split('').sort.join } # alphabetically and
+                 .map { |m| m[1].chars.sort.join } # alphabetically and
                  .join[0..4] # joined together for the checksum (first 5 chars)
       if match[:checksum] == checksum
         sec_id = match[:sector_id].to_i
