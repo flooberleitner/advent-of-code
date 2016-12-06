@@ -13,7 +13,7 @@ class CharCounter
 
   def most_common
     return '_' unless @chars
-    @chars.sort_by(&:last).reverse.first.first
+    @chars.sort_by(&:last).last.first
   end
 
   def least_common
