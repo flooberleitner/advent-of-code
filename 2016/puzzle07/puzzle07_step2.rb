@@ -89,6 +89,8 @@ end
 puts "Puzzle05 Step1: #{tls.valid_ip_count}"
 puts "Puzzle05 Step2: #{ssl.valid_ip_count} (Should return 231)"
 
+# TODO: clean up the mess!!
+#
 # After comparison to result of fixed_carbon (compared the denied IPs) the
 # offending IP is
 # 'pmfxjpcflryhzywdx[yrzzkvweeyrywjvryr]xjsgrxggxetihbhiy[vrrgrojjtbwngsz]wibtryrkfmduzjzadwe'
