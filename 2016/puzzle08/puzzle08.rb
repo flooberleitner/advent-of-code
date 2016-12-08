@@ -49,26 +49,16 @@ class Display
   end
 
   def print
-    @data.each { |ln| puts ln.map { |px| px == 1 ? '##' : '  ' }.join }
+    puts '=' * (@data[0].size * 2 + 4)
+    @data.each { |ln| puts "==#{ln.map { |px| px == 1 ? '##' : '  ' }.join}==" }
+    puts '=' * (@data[0].size * 2 + 4)
   end
 end
 
-# test_cmds = [
-#   'rect 3x2',
-#   'rotate column x=1 by 1',
-#   'rotate row y=0 by 4',
-#   'rotate column x=1 by 1'
-# ]
-# test = Display.new(width:7, height: 3)
-# test.process_commands(test_cmds)
-# puts '=' * 100
-# test.print
-# puts "Test pixel lit: #{test.pixels_lit}"
-
-step1 = Display.new(width: 50, height: 6)
+display = Display.new(width: 50, height: 6)
 commands = open(ARGV[0]).readlines.map(&:strip)
-step1.process_commands(commands)
+display.process_commands(commands)
 
-step1.print
-puts "Puzzle08 Step1: Pixels lit: #{step1.pixels_lit}"
-puts 'Puzzle08 Step2: Read the displayprint above ;)'
+display.print
+puts "Puzzle08 Step1: Pixels lit: #{display.pixels_lit}"
+puts 'Puzzle08 Step2: Read the displayprint above'
