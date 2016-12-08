@@ -13,8 +13,6 @@ class Display
   }.freeze
 
   def initialize(width:, height:)
-    @width = width
-    @height = height
     @data = Array.new(height) { Array.new(width, 0) }
   end
 
@@ -24,7 +22,7 @@ class Display
 
   def process_command(command)
     CMD_MAP.each do |pattern, method|
-      if m = command.match(pattern)
+      command.match(pattern) do |m|
         send(method, m[:p1].to_i, m[:p2].to_i)
         return true
       end
@@ -37,9 +35,9 @@ class Display
   end
 
   def rotate_column(index, dist)
-    col = @data.map { |row| row[index] }
-    col.rotate!(-dist)
-    col.each_with_index { |c, i| @data[i][index] = c }
+    @data.map { |row| row[index] }
+         .rotate(-dist)
+         .each_with_index { |c, i| @data[i][index] = c }
   end
 
   def rotate_row(index, dist)
@@ -51,7 +49,7 @@ class Display
   end
 
   def print
-    @data.each { |l| puts l.map { |p| p == 1 ? '##' : '  ' }.join }
+    @data.each { |ln| puts ln.map { |px| px == 1 ? '##' : '  ' }.join }
   end
 end
 
@@ -71,9 +69,6 @@ step1 = Display.new(width: 50, height: 6)
 commands = open(ARGV[0]).readlines.map(&:strip)
 step1.process_commands(commands)
 
-puts '=' * 100
-puts "Puzzle08 Step1: Pixels lit: #{step1.pixels_lit}"
 step1.print
-puts '=' * 100
+puts "Puzzle08 Step1: Pixels lit: #{step1.pixels_lit}"
 puts 'Puzzle08 Step2: Read the displayprint above ;)'
-puts '=' * 100
