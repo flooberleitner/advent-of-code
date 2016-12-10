@@ -89,7 +89,7 @@ class Factory
   def process(inputs)
     inputs.each do |input|
       input.match(INPUT_INSTR) do |m|
-        @bots[m[:bot].to_i].add_chip(m[:val].to_i)
+        get_entity('bot', m[:bot].to_i).add_chip(m[:val].to_i)
       end
     end
   end
