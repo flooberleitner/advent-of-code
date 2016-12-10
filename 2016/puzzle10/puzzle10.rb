@@ -71,27 +71,17 @@ class Factory
     @bots = []
     @outputs = []
     @specials = [17, 61]
-    create_bots(setup)
-    create_connections(setup)
+    setup_entities(setup)
   end
   attr_accessor :bots, :outputs
 
-  def create_bots(setup)
+  def setup_entities(setup)
     setup.each do |instr|
       instr.match(BEHAV_INSTR) do |m|
-        add_entity('bot', m[:id].to_i)
-        add_entity(m[:low_type], m[:low_id].to_i)
-        add_entity(m[:high_type], m[:high_id].to_i)
-      end
-    end
-  end
-
-  def create_connections(setup)
-    setup.each do |instr|
-      instr.match(BEHAV_INSTR) do |m|
+        bot = get_entity('bot', m[:id].to_i)
         low_to = get_entity(m[:low_type], m[:low_id].to_i)
         high_to = get_entity(m[:high_type], m[:high_id].to_i)
-        @bots[m[:id].to_i].set_behaviour(low_to: low_to, high_to: high_to)
+        bot.set_behaviour(low_to: low_to, high_to: high_to)
       end
     end
   end
@@ -104,14 +94,6 @@ class Factory
     end
   end
 
-  def add_entity(type, id)
-    if type == 'bot' && @bots[id].nil?
-      @bots[id] = Bot.new(id, @specials, self)
-    elsif @outputs[id].nil?
-      @outputs[id] = Output.new(id)
-    end
-  end
-
   def got_specials(bot:)
     @special_bots ||= []
     @special_bots << bot
@@ -119,7 +101,11 @@ class Factory
   attr_accessor :special_bots
 
   private def get_entity(type, id)
-    type == 'bot' ? @bots[id] : @outputs[id]
+    if type == 'bot'
+      @bots[id] ||= Bot.new(id, @specials, self)
+    else
+      @outputs[id] ||= Output.new(id)
+    end
   end
 end
 
