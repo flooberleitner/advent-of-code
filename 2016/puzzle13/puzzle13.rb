@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require_relative '../lib/node_searcher'
+require_relative '../lib/node_traversal'
 
 class Node
   def initialize(odfn:, x:, y:, step_count: 0)
@@ -42,8 +42,7 @@ end
 
 def solve_part1(start:, target:)
   result = nil
-  node_searcher = NodeSearcher.new do |ns|
-    ns.randomize
+  node_searcher = NodeTraversal.new do |ns|
     ns.on_next_nodes(&:neighbors)
     ns.on_check_node { |node| :break if node == target }
     ns.on_finished { |last_node, _visited| result = last_node }
@@ -54,8 +53,7 @@ end
 
 def solve_part2(start:, max_steps:)
   result = nil
-  node_searcher = NodeSearcher.new do |ns|
-    ns.randomize
+  node_searcher = NodeTraversal.new do |ns|
     ns.on_next_nodes(&:neighbors)
     ns.on_check_node { |node| :next if node.step_count == max_steps }
     ns.on_finished { |_last_node, visited| result = visited.size }
