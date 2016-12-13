@@ -73,7 +73,7 @@ class NodeSearcher
         # I did a DepthFirst (continue with element last added to queue) instead
         # of BreadthFirst (continue with oldest element in queue).
         permutations = new_nodes.permutation.to_a
-        permutations[@prng.rand(permutations.size - 1)]
+        new_nodes = permutations[@prng.rand(permutations.size - 1)]
       end
 
       new_nodes.each do |n|
