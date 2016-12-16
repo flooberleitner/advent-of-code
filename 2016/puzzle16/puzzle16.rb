@@ -4,9 +4,7 @@ def disk_fill(initial, disk_size)
   out = initial
   until out.size > disk_size
     out << '0'
-    tmp = ''
-    out[0..-2].reverse.each_char{ |c| tmp << (c == '0' ? '1' : '0') }
-    out << tmp
+    out << out[0..-2].reverse.tr('10', '01')
   end
 
   out[0...disk_size]
@@ -16,7 +14,7 @@ end
 # - calculate how many checksum steps would be needed from the final disksize
 # - trickle down the checksum till final stage
 def checksum(content)
-  out = []
+  out = ''
   (0...content.size).step(2) do |idx|
     sub = content[idx..(idx + 1)]
     case sub
@@ -29,7 +27,7 @@ def checksum(content)
     end
   end
 
-  out = out.join
+  out = out
   if out.size.even?
     checksum(out)
   else
