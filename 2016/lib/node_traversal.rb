@@ -4,6 +4,7 @@ class NodeTraversal
   def initialize
     @breadth_first = true
     @prng = nil
+    @respect_visited = true
     @on_finished_cb = nil
     @on_next_nodes_cb = nil
     @on_check_node_cb = nil
@@ -35,6 +36,19 @@ class NodeTraversal
   # DEFAULT
   def no_randomize
     @prng = nil
+  end
+
+  ##
+  # Traverse all nodes, regardless of already visited ones
+  def traverse_all
+    @respect_visited = false
+  end
+
+  ##
+  # Do not add nodes to queue if they've already been visited
+  # DEFAULT
+  def respect_visited
+    @respect_visited = true
   end
 
   ##
@@ -81,7 +95,7 @@ class NodeTraversal
     until queued.empty?
       node = @breadth_first ? queued.delete_at(0) : queued.pop
       last_node_checked = node
-      visited.push(node) unless visited.include?(node)
+      visited.push(node) unless !@respect_visited || visited.include?(node)
 
       case @on_check_node_cb.call(node)
       when :break then break
@@ -101,7 +115,7 @@ class NodeTraversal
       end
 
       new_nodes.each do |n|
-        queued.push n unless visited.include?(n)
+        queued.push n unless @respect_visited && visited.include?(n)
       end
     end
     @on_finished_cb.call(last_node_checked, visited) if @on_finished_cb
