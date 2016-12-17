@@ -4,13 +4,13 @@ require_relative '../lib/node_traversal'
 require 'digest'
 
 class Node
-  def initialize(passcode:, x:, y:, history: '')
+  def initialize(passcode:, x:, y:, moves: '')
     @passcode = passcode
     @x = x
     @xsize = 4
     @y = y
     @ysize = 4
-    @history = history
+    @moves = moves
     @dir_moves = {
       'L' => [-1, 0],
       'R' => [1, 0],
@@ -18,7 +18,7 @@ class Node
       'D' => [0, 1]
     }
   end
-  attr_reader :x, :y, :history
+  attr_reader :x, :y, :moves
 
   def neighbors
     directions.chars.map do |dir|
@@ -26,17 +26,9 @@ class Node
         passcode: @passcode,
         x: @x + @dir_moves[dir][0],
         y: @y + @dir_moves[dir][1],
-        history: @history + dir
+        moves: @moves + dir
       )
-    end.delete_if(&:invalid?)
-  end
-
-  def valid?
-    @x < @xsize && @y < @ysize
-  end
-
-  def invalid?
-    !valid?
+    end
   end
 
   def eql?(other)
@@ -50,12 +42,12 @@ class Node
   def directions
     # meaning of first 4 character positions in the hash
     # -> zip them with if there is an available door
-    rpc = Digest::MD5.hexdigest(@passcode + @history)[0..3]
+    rpc = Digest::MD5.hexdigest(@passcode + @moves)[0..3]
     doors = 'UDLR'.chars.select.with_index { |_c, i| rpc[i] =~ /[b-f]/ }
     doors.delete('L') if @x <= 0
-    doors.delete('R') if @x >= @xsize
+    doors.delete('R') if @x >= (@xsize - 1)
     doors.delete('U') if @y <= 0
-    doors.delete('D') if @y >= @ysize
+    doors.delete('D') if @y >= (@ysize - 1)
     doors.join
   end
 end
@@ -89,8 +81,8 @@ end
     start: Node.new(passcode: d[1], x: 0, y: 0),
     target: Node.new(passcode: d[1], x: 3, y: 3)
   )
-  p1 = res.first.history
+  p1 = res.first.moves
   puts " Shortest: #{p1}#{p1 == d[2] ? '' : " !!! corr: #{d[2]}"}"
-  p2 = res[1].history.size
+  p2 = res[1].moves.size
   puts "  Longest: #{p2}#{p2 == d[3] ? '' : " !!! corr: #{d[3]}"}"
 end
