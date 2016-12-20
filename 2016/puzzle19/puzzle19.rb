@@ -1,31 +1,56 @@
 #!/usr/bin/env ruby
 
-def solve_part1(elves_count)
-  puts "solve_part1: elves:#{elves_count}, "
-  puts '  Initializing'
-  elves = Hash[(0...elves_count).map { |e| [e, 1] }]
-  puts '  Solving'
-  until elves.size == 1
-    keys = elves.keys
-    keys.each_with_index do |key, idx|
-      next if elves[key].nil? || elves[key].zero?
-      if keys[idx] == keys.last
-        elves[key] += elves[keys.first]
-        elves.delete(keys.first)
-      else
-        elves[key] += elves[keys[idx + 1]]
-        elves.delete(keys[idx + 1])
-      end
+require_relative '../lib/linked_list'
+
+class ElvesList < LinkedList
+  def make_circle
+    @tail.next = @head
+    @head.prev = @tail
+  end
+
+  def shootout_part1
+    make_circle
+    cur_node = @head
+    until @size == 1
+      cur_node = cur_node.next.next
+      cur_node.prev.delete
     end
   end
-  puts '  Solved'
-  elves.keys.first + 1
+
+  def shootout_part2
+    make_circle
+    cur_node = @head
+    # first move to the node in the middle that will be removed first
+    (@size / 2).times do
+      cur_node = cur_node.next
+    end
+    # position cursor after node to be removed
+    cur_node = cur_node.next
+    cur_node.prev.delete
+    # from that first shootout it is always
+    # Advance by 1 and delete node previous to cursor.
+    # In case of size is even, we move the cursor by one more node before
+    # we delete the node previous to cursor
+    until @size == 1
+      cur_node = cur_node.next
+      cur_node = cur_node.next if @size.even?
+      cur_node.prev.delete
+    end
+  end
 end
 
 [
-  ['Test 1', 5, 3],
-  ['Part 1', 3_012_210, 1_830_117]
+  ['Test 1', :shootout_part1, 5, 3],
+  ['Part 1', :shootout_part1, 3_012_210, 1_830_117],
+  ['Test 2', :shootout_part2, 5, 2],
+  ['Part 2', :shootout_part2, 3_012_210, 1_417_887]
 ].each do |p|
-  res = solve_part1(p[1])
-  puts "#{p[0]}: #{res}#{res == p[2] ? '' : " (corr:#{p[2]})"}"
+  puts "#{p[0]}:"
+  puts '  Setting up elves'
+  elves = ElvesList.new
+  p[2].times { |idx| elves.add_last(idx + 1) }
+  puts '  Starting Shootout'
+  elves.send(p[1])
+  res = elves.first.data
+  puts "  Result: #{res}#{res == p[3] ? '' : " !!! corr:#{p[3]}"}"
 end
