@@ -13,7 +13,7 @@ class PasswordFinderStep2
 
   private def search
     cnt = -1
-    while @password.any? { |c| c.nil? }
+    while @password.any?(&:nil?)
       cnt += 1
       if (cnt % 1_000_000).zero?
         puts "\n#{cnt}: #{password}\n"
@@ -22,12 +22,11 @@ class PasswordFinderStep2
       end
 
       cipher = Digest::MD5.hexdigest(@door_id + cnt.to_s)
-      if cipher[0..4] == '00000'
-        pos = cipher[5].ord - 48 # 48 == '0'
-        next if pos > (@length - 1)
-        next unless @password[pos].nil?
-        @password[pos] = cipher[6]
-      end
+      next unless cipher[0..4] == '00000'
+      pos = cipher[5].ord - 48 # 48 == '0'
+      next if pos > (@length - 1)
+      next unless @password[pos].nil?
+      @password[pos] = cipher[6]
     end
   end
 

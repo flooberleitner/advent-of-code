@@ -2,6 +2,8 @@
 
 require_relative '../lib/linked_list'
 
+##
+# Implementation of linked list of elves
 class ElvesList < LinkedList
   def make_circle
     @tail.next = @head

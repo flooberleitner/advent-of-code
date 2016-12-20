@@ -38,9 +38,7 @@ class BaseCollector
     confirmed = @key_candidates.map do |c_key_index, c_digest|
       m = c_digest.match(CANDIDATE_PAT)
       # puts "match: #{m.inspect}" unless m.nil?
-      if digest.include?(m[2] * 5)
-        next c_key_index
-      end
+      next c_key_index if digest.include?(m[2] * 5)
       nil
     end.compact
 

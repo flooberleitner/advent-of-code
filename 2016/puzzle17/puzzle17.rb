@@ -74,7 +74,7 @@ end
   ['Test 1', 'ihgpwlah', 'DDRRRD', 370],
   ['Test 2', 'kglvqrro', 'DDUDRLRRUDRD', 492],
   ['Test 3', 'ulqzkmiv', 'DRURDRUDDLLDLUURRDULRLDUUDDDRR', 830],
-  ['Puzzle 17', 'veumntbg', 'DDRRULRDRD', 536],
+  ['Puzzle 17', 'veumntbg', 'DDRRULRDRD', 536]
 ].each do |d|
   puts "#{d[0]}:"
   res = solve(

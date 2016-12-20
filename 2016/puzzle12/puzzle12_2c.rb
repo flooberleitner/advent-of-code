@@ -5,24 +5,24 @@
 # which runs insanly faster than my Emulator in ruby
 C_VALUE = 1
 
-puts "#include <stdio.h>"
+puts '#include <stdio.h>'
 puts
 puts "int a = 0, b = 0, c = #{C_VALUE}, d = 0;"
 puts
-puts "int main() {"
+puts 'int main() {'
 
 DATA.each.with_index do |line, n|
   puts "line#{n}:"
   if line =~ /^cpy ([abcd]|-?\d+) ([abcd])$/
-    puts "  #$2 = #$1;"
+    puts "  #{Regexp.last_match(2)} = #{Regexp.last_match(1)};"
   elsif line =~ /^cpy (-?\d+) ([abcd])$/
-    puts "  #$2 = #$1;"
+    puts "  #{Regexp.last_match(2)} = #{Regexp.last_match(1)};"
   elsif line =~ /^inc ([abcd])$/
-    puts "  #$1++;"
+    puts "  #{Regexp.last_match(1)}++;"
   elsif line =~ /^dec ([abcd])$/
-    puts "  #$1--;"
+    puts "  #{Regexp.last_match(1)}--;"
   elsif line =~ /^jnz ([abcd]|-?\d+) (-?\d+)$/
-    puts "  if (#$1) goto line#{n + $2.to_i};"
+    puts "  if (#{Regexp.last_match(1)}) goto line#{n + Regexp.last_match(2).to_i};"
   else
     puts "!!! PARSE ERROR: #{line}"
     exit
@@ -30,9 +30,9 @@ DATA.each.with_index do |line, n|
 end
 
 puts
-puts "  printf(\"%d\\n\", a);"
-puts "  return 0;"
-puts "}"
+puts '  printf("%d\\n", a);'
+puts '  return 0;'
+puts '}'
 puts
 
 __END__

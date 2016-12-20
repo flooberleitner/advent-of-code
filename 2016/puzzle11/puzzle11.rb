@@ -86,7 +86,7 @@ class BuildingState
       # puts "=== Equal ==="
       # puts "#{inspect}"
       # puts "#{other.inspect}"
-      return true 
+      return true
     end
 
     # puts "=== Not Equal ==="
@@ -106,7 +106,6 @@ class BuildingState
     @moves = source.moves
   end
 end
-
 
 # TODO: Write traversal function
 def solve_part1(start)

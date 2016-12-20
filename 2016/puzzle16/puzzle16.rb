@@ -40,6 +40,6 @@ puts "Puzzle16 Part 1: #{checksum(disk_fill('11110010111001001', 272))} "\
      "(corr: 01110011101111011)"
 
 fill_part2 = disk_fill('11110010111001001', 35_651_584)
-puts "calculating checksum - takes some time and RAM"
+puts 'calculating checksum - takes some time and RAM'
 puts "Puzzle16 Part 2: #{checksum(fill_part2)} "\
      "(corr: 11001111011000111)"
