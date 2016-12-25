@@ -109,10 +109,11 @@ class AssembunnyEmulator
                   i3[:cmd] == :jnz &&
                   i2[:args].first == i3[:args].first && i3[:args][1] == -2
       instructions[idx] = {
-        cmd: :inc,
+        cmd: :inc_by_opt,
         args: [
           i1[:args].first,
-          i2[:args].first
+          i2[:args].first,
+          3
         ].freeze
       }.freeze
       instructions[idx + 1] = { cmd: :nop, args: {}.freeze }.freeze
@@ -143,12 +144,13 @@ class AssembunnyEmulator
                   i3[:args].first == i4[:args].first && i4[:args][1] == -2 &&
                   i5[:args].first == i6[:args].first && i6[:args][1] == -5
       instructions[idx] = {
-        cmd: :inc,
+        cmd: :inc_by_mul_opt,
         args: [
           i2[:args].first,
           i1[:args].first,
           i5[:args].first,
-          i1[:args][1]
+          i1[:args][1],
+          6
         ].freeze
       }.freeze
       instructions[idx + 1] = { cmd: :nop, args: {}.freeze }.freeze
@@ -176,48 +178,34 @@ class AssembunnyEmulator
 
   ##
   # INC instruction
-  # Increment given register based on number or arguments.
-  # Execution is done in specialized incrementers
-  private def inc(args)
-    case args.size
-    when 1 then inc1(args)
-    when 2 then inc2(args)
-    when 4 then inc4(args)
-    else
-      raise "inc: instruction data size '#{args.size}'"
-    end
-  end
-
-  ##
-  # INC1 instruction
   # Increase given register by 1
-  private def inc1(args)
+  private def inc(args)
     @regs[args.first] += 1 if args.first.is_a? Symbol
     inc_program_counter
   end
 
   ##
-  # INC2 instruction
+  # INC_BY instruction
   # Increase given register by given value or other register content.
   # Leaves register in +args[1]+ with 0.
-  private def inc2(args)
+  private def inc_by_opt(args)
     @regs[args.first] += get_data_from(args[1])
     @regs[args[1]] = 0
-    inc_program_counter(3)
+    inc_program_counter(args.last)
   end
 
   ##
-  # INC4 instruction
+  # INC_BY_MUL instruction
   # Increase given register by product of
   # - two registers content or
   # - constant number and a register content or
   # - two constant numbers
   # Leaves register in +args[2]+ and +args[3]+ with 0.
-  private def inc4(args)
+  private def inc_by_mul_opt(args)
     @regs[args.first] += get_data_from(args[1]) * get_data_from(args[2])
     @regs[args[2]] = 0
     @regs[args[3]] = 0
-    inc_program_counter(6)
+    inc_program_counter(args.last)
   end
 
   ##
@@ -231,9 +219,7 @@ class AssembunnyEmulator
   # CPY instruction
   # Copys a register or constant number into another register
   private def cpy(args)
-    if args[1].is_a? Symbol
-      @regs[args[1]] = get_data_from(args.first)
-    end
+    @regs[args[1]] = get_data_from(args.first) if args[1].is_a? Symbol
     inc_program_counter
   end
 
@@ -255,6 +241,10 @@ class AssembunnyEmulator
   # Determine the command the given instruciton should be toggled to
   # Increase given register by 1
   private def toggle_command(instr)
+    # do not toggle optimized commands
+    return instr[:cmd] if instr[:cmd] =~ /^.+_opt$/
+
+    # toggle depends on number of arguments
     case instr[:args].size
     when 1
       case instr[:cmd]
@@ -288,8 +278,8 @@ end
 
 # Part 2 takes far too long to run
 #   -> transpile to C?
-#   -> also think about what does the Assembunny code do, not just instruction by instruction
-#      but in whole blocks of instructions
+#   -> also think about what does the Assembunny code do, not just instruction
+#      by instruction but in whole blocks of instructions
 #      Maybe some parts can be optimized by introducing new instructions?
 #
 # Another ides: p_tseng wrote an optimiser for Assembunny code
