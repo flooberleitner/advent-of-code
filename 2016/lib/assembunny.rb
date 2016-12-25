@@ -24,9 +24,12 @@ class AssembunnyEmulator
 
   def initialize(source: nil)
     @debug = false
+    @instructions = []
     @optimizers = []
+    add_optimizer :optimize_inc_by_mul
+    add_optimizer :optimize_inc_by
     reset_emulator
-    @instructions_original = load(source) if source
+    load(source) if source
   end
   attr_reader :regs, :cycles
 
@@ -36,9 +39,7 @@ class AssembunnyEmulator
   def execute(source: nil, reg_init: {})
     reset_emulator
     @regs.merge! reg_init
-    @instructions_original = load(source) if source
-    @instructions_toggled = @instructions_original.map(&:dup)
-    @instructions = optimize(@instructions_toggled)
+    load(source) if source
     @instructions.each { |i| puts i.inspect } if @debug
     puts "Instruction Count: #{@instructions.size}" if @debug
     while @program_counter < @instructions.size
@@ -72,6 +73,12 @@ class AssembunnyEmulator
   end
 
   ##
+  # Run the optimizations and replace current instruction list to optimized list
+  def optimize_instructions
+    @instructions = optimize(@instructions_toggled)
+  end
+
+  ##
   # Retrieve data from given identifier.
   # If identifier is a Symbol the content of the matching register is returned.
   private def get_data_from(id)
@@ -82,10 +89,6 @@ class AssembunnyEmulator
   # Resets the internal state of the emulator
   private def reset_emulator
     @regs = Hash.new(0)
-    @instructions = []
-    @optimizers = []
-    add_optimizer :optimize_inc_by_mul
-    add_optimizer :optimize_inc_by
     @program_counter = 0
     @cycles = 0
   end
@@ -95,7 +98,7 @@ class AssembunnyEmulator
   # Returns an array of instructions.
   # In instruction is a hash {cmd: :COMMAND, :args [ARGUMENTS]}
   private def load(source)
-    source.map do |line|
+    @instructions_original = source.map do |line|
       m = line.match(INSTRUCTION_PATTERN)
       raise "Unknown Assembunny instruction '#{line}'" unless m
       {
@@ -106,6 +109,9 @@ class AssembunnyEmulator
         ].compact.freeze
       }.freeze
     end.freeze
+
+    @instructions_toggled = @instructions_original.map(&:dup)
+    optimize_instructions
   end
 
   ##
@@ -136,7 +142,8 @@ class AssembunnyEmulator
     #   jnz c -2
     # is a 'a += c' which can be expressed as a 2 arg inc 'inc a, c'
     # leaving c with 0.
-    instructions.each_cons(3).with_index do |(i1, i2, i3), idx|
+    pattern_size = 3
+    instructions.each_cons(pattern_size).with_index do |(i1, i2, i3), idx|
       next unless i1[:cmd] == :inc &&
                   i2[:cmd] == :dec &&
                   i3[:cmd] == :jnz &&
@@ -149,8 +156,9 @@ class AssembunnyEmulator
           3
         ].freeze
       }.freeze
-      instructions[idx + 1] = { cmd: :nop, args: {}.freeze }.freeze
-      instructions[idx + 2] = { cmd: :nop, args: {}.freeze }.freeze
+      (pattern_size - 1).times do |i|
+        instructions[idx + 1 + i] = { cmd: :nop, args: [].freeze }.freeze
+      end
     end
   end
 
@@ -167,7 +175,8 @@ class AssembunnyEmulator
     # is a 'a += b * d' which will be a new inc with 4 args 'inc, [a, b, d, c]'
     # leaving c&d with 0.
     # b could also be a constant number
-    instructions.each_cons(6).with_index do |(i1, i2, i3, i4, i5, i6), idx|
+    pattern_size = 6
+    instructions.each_cons(pattern_size).with_index do |(i1, i2, i3, i4, i5, i6), idx|
       next unless i1[:cmd] == :cpy &&
                   i2[:cmd] == :inc &&
                   i3[:cmd] == :dec &&
@@ -186,11 +195,9 @@ class AssembunnyEmulator
           6
         ].freeze
       }.freeze
-      instructions[idx + 1] = { cmd: :nop, args: {}.freeze }.freeze
-      instructions[idx + 2] = { cmd: :nop, args: {}.freeze }.freeze
-      instructions[idx + 3] = { cmd: :nop, args: {}.freeze }.freeze
-      instructions[idx + 4] = { cmd: :nop, args: {}.freeze }.freeze
-      instructions[idx + 5] = { cmd: :nop, args: {}.freeze }.freeze
+      (pattern_size - 1).times do |i|
+        instructions[idx + 1 + i] = { cmd: :nop, args: [].freeze }.freeze
+      end
     end
   end
 
@@ -265,7 +272,7 @@ class AssembunnyEmulator
     toggle_idx = @program_counter + get_data_from(args.first)
     unless toggle_idx >= @instructions_toggled.size
       @instructions_toggled[toggle_idx][:cmd] = toggle_command(@instructions_toggled[toggle_idx])
-      @instructions = optimize(@instructions_toggled)
+      optimize_instructions
     end
     inc_program_counter
   end
