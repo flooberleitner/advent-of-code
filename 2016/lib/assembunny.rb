@@ -22,19 +22,21 @@
 class AssembunnyEmulator
   INSTRUCTION_PATTERN = /^(?<cmd>\w+)( (?<d1>-?[\d\w]+) ?)(?<d2>-?[\d\w]+)?$/
 
-  def initialize
+  def initialize(source: nil)
     @debug = false
+    @optimizers = []
     reset_emulator
+    @instructions_original = load(source) if source
   end
   attr_reader :regs, :cycles
 
   ##
   # Execute the provided Assembunny sourcecode.
   # Register bank is initialized with given values.
-  def execute(source:, reg_init: {})
+  def execute(source: nil, reg_init: {})
     reset_emulator
     @regs.merge! reg_init
-    @instructions_original = load(source)
+    @instructions_original = load(source) if source
     @instructions_toggled = @instructions_original.map(&:dup)
     @instructions = optimize(@instructions_toggled)
     @instructions.each { |i| puts i.inspect } if @debug
@@ -43,7 +45,11 @@ class AssembunnyEmulator
       @cycles += 1
       instr = @instructions[@program_counter]
       puts "#{@cycles}: pc=#{@program_counter}, regs=#{@regs.inspect}, instr=#{instr.inspect}" if @debug
-      send(instr[:cmd], instr[:args])
+      begin
+        send(instr[:cmd], instr[:args])
+      rescue AbortExecutionError
+        break
+      end
     end
   end
 
@@ -60,10 +66,26 @@ class AssembunnyEmulator
   end
 
   ##
+  # Add an optimizer callback that will be executed after all previously added optimizers.
+  def add_optimizer(optimizer)
+    @optimizers << optimizer
+  end
+
+  ##
+  # Retrieve data from given identifier.
+  # If identifier is a Symbol the content of the matching register is returned.
+  private def get_data_from(id)
+    id.is_a?(Symbol) ? @regs[id] : id
+  end
+
+  ##
   # Resets the internal state of the emulator
   private def reset_emulator
     @regs = Hash.new(0)
     @instructions = []
+    @optimizers = []
+    add_optimizer :optimize_inc_by_mul
+    add_optimizer :optimize_inc_by
     @program_counter = 0
     @cycles = 0
   end
@@ -100,15 +122,14 @@ class AssembunnyEmulator
     optimized = instructions.dup
 
     # inc_by_mul first becaus inc_by is a sub of this sequence
-    optimize_inc_by_mul(optimized)
-    optimize_inc_by(optimized)
+    @optimizers.each { |o| send(o, optimized) }
 
     optimized.freeze
   end
 
   ##
   # Optimize inc_by pattern in place in +instructions+
-  def optimize_inc_by(instructions)
+  private def optimize_inc_by(instructions)
     # Sequence
     #   inc a
     #   dec c
@@ -135,7 +156,7 @@ class AssembunnyEmulator
 
   ##
   # Optimize inc_by pattern in place in +instructions+.
-  def optimize_inc_by_mul(instructions)
+  private def optimize_inc_by_mul(instructions)
     # Sequence 2
     #   cpy b c
     #   inc a
@@ -281,9 +302,7 @@ class AssembunnyEmulator
   end
 
   ##
-  # Retrieve data from given identifier.
-  # If identifier is a Symbol the content of the matching register is returned.
-  private def get_data_from(id)
-    id.is_a?(Symbol) ? @regs[id] : id
+  # Can be raised by a command handler to abort execution in emulator
+  class AbortExecutionError < StandardError
   end
 end
