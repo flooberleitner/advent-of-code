@@ -20,18 +20,19 @@
 # p_tseng implemented a clever optimiser which was inspiration for the
 # optimizer part (https://www.reddit.com/r/adventofcode/comments/5jvbzt/2016_day_23_solutions/dbje1ik/)
 class AssembunnyEmulator
-  INSTRUCTION_PATTERN = /^(?<cmd>\w+)( (?<d1>-?[\d\w]+) ?)(?<d2>-?[\d\w]+)?$/
+  INSTRUCTION_PATTERN = /^(?<cmd>\w+)( (?<d1>-?[\d\w]+) ?)(?<d2>-?[\d\w]+)?( *#*.*)?$/
 
   def initialize(source: nil)
     @debug = false
     @instructions = []
+    @optimizer_enabled = true
     @optimizers = []
     add_optimizer :optimize_inc_by_mul
     add_optimizer :optimize_inc_by
     reset_emulator
     load(source) if source
   end
-  attr_reader :regs, :cycles
+  attr_reader :regs, :cycles, :instructions
 
   ##
   # Execute the provided Assembunny sourcecode.
@@ -67,6 +68,20 @@ class AssembunnyEmulator
   end
 
   ##
+  # Enable instruction optimizer
+  def enable_optimizer
+    @optimizer_enabled = true
+    optimize_instructions
+  end
+
+  ##
+  # Disable instruction optimizer
+  def disable_optimizer
+    @optimizer_enabled = false
+    @instructions = @instructions_toggled.map { |i| i.dup.freeze }.freeze
+  end
+
+  ##
   # Add an optimizer callback that will be executed after all previously added optimizers.
   def add_optimizer(optimizer)
     @optimizers << optimizer
@@ -75,6 +90,7 @@ class AssembunnyEmulator
   ##
   # Run the optimizations and replace current instruction list to optimized list
   def optimize_instructions
+    return unless @optimizer_enabled
     @instructions = optimize(@instructions_toggled)
   end
 
