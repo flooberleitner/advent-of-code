@@ -6,16 +6,19 @@ class Puzzle25Emulator < AssembunnyEmulator
   def initialize(source: nil)
     super
     add_optimizer :optimize_dec_by
-    @instructions = optimize(@instructions_toggled)
+    optimize_instructions
+  end
+  attr_accessor :clock
+
+  private def reset_emulator
+    super
     @clock = ''
   end
-  attr_reader :clock
 
   private def out(args)
-    # @instructions.each { |i| puts "#{i[:cmd]} #{i[:args].join(' ')}" }
-    # exit
     @clock << get_data_from(args.first).to_s
-    raise AbortExecutionError if @clock.size >= 4
+    inc_program_counter
+    raise AbortExecutionError if @clock.size >= 10
   end
 
   private def optimize_dec_by(instructions)
@@ -42,8 +45,9 @@ class Puzzle25Emulator < AssembunnyEmulator
                     i1[:args].first == i4[:args].first
                   ) &&
                   i1[:args][1] == 2 &&
-                  i2[:args] == [1, 4] &&
+                  i2[:args].first == 1 &&
                   i5[:args] == [1, -4]
+      pc_offset = i2[:args][1] + 1
       by = i1[:args].first
       # 'which_reg' is the reg that is decremented other than the 'by' reg
       which_reg = [i3[:args].first, i3[:args].first]
@@ -54,7 +58,7 @@ class Puzzle25Emulator < AssembunnyEmulator
         args: [
           which_reg,
           by,
-          5
+          pc_offset
         ].freeze
       }.freeze
       (pattern_size - 1).times do |i|
@@ -74,13 +78,16 @@ end
 # Far too slow to make an effective search
 # -> check what pattern the instructions from line 10 -> 29/30 represent and find an optimisation for that
 #    because this runs for longer and longer the higher reg[:a] is set
-source_code = open('puzzle25_part1_input.txt').readlines.map(&:strip)
+source_code = open('puzzle25_part1_input_opt.txt').readlines.map(&:strip)
 emu = Puzzle25Emulator.new(source: source_code)
+# emu.disable_optimizer
 # emu.enable_debug
-100_000.times do |idx|
-  puts "idx=#{idx}" if (idx % 100).zero?
+# emu.instructions.each { |i| puts "#{i[:cmd]} #{i[:args].join(' ')}" }
+# exit
+(150..160).to_a.each do |idx|
+  puts "idx=#{idx}" if (idx % 10).zero?
   emu.execute(reg_init: { a: idx })
-  if emu.clock == '0101'
+  if emu.clock == '0101010101'
     puts "Part 1: #{idx}"
     break
   end
