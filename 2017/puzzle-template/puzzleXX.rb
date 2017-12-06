@@ -23,15 +23,15 @@ RUNS = {
 }.freeze
 
 # Make each run
-RUNS.each do |name, data|
+RUNS.each do |name, pars|
   # skip run?
-  if data[:skip]
+  if pars[:skip]
     puts "Skipped '#{name}'"
     next
   end
 
   # open input data and process it
-  open(data[:input]) do |input|
+  open(pars[:input]) do |input|
     # Read all input lines and sanitize
     data = input.readlines.map(&:strip)
 
@@ -39,7 +39,7 @@ RUNS.each do |name, data|
     res = 0
 
     # Print result
-    success_msg = res == data[:target] ? 'succeeded' : 'failed'
-    puts "AOC17-#{PUZZLE}/#{name} #{success_msg}: #{res} (Target: #{data[:target]})"
+    success_msg = res == pars[:target] ? 'succeeded' : 'failed'
+    puts "AOC17-#{PUZZLE}/#{name} #{success_msg}: #{res} (Target: #{pars[:target]})"
   end
 end
