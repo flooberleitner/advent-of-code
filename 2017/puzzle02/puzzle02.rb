@@ -21,6 +21,6 @@ open(ARGV[0]) do |input|
   checksum2 = data.map(&:even_divider).sum
 
   # Print result
-  puts "AOC17-02/1: #{checksum1} (Corr: 39126)"
-  puts "AOC17-02/2: #{checksum2} (Corr: 258)"
+  puts "AOC17-02/1: #{checksum1} (Corr: 37923)"
+  puts "AOC17-02/2: #{checksum2} (Corr: 263)"
 end
