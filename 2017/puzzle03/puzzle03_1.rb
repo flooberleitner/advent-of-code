@@ -34,14 +34,9 @@ RUNS = {
     target: 31
   },
   puzzle01: {
-    input: 312_051,
-    target: 430
+    input: 289_326,
+    target: 419
   },
-  puzzle02: {
-    skip: true,
-    input: 'input.txt',
-    target: 0
-  }
 }.freeze
 
 def main
