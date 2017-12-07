@@ -4,7 +4,7 @@
 PUZZLE = 0
 
 # Declare all runs to be done for this puzzle
-RUNS = {
+{
   test: {
     skip: true,
     input: 'input_test.txt',
@@ -20,10 +20,7 @@ RUNS = {
     input: 'input.txt',
     target: 0
   }
-}.freeze
-
-# Make each run
-RUNS.each do |name, pars|
+}.each do |name, pars|
   # skip run?
   if pars[:skip]
     puts "Skipped '#{name}'"
