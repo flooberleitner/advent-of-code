@@ -8,17 +8,14 @@ PUZZLE = 0
   test: {
     skip: true,
     input: 'input_test.txt',
-    target: 0
+    target1: 0,
+    target2: 0
   },
-  puzzle01: {
+  puzzle: {
     skip: true,
     input: 'input.txt',
-    target: 0
-  },
-  puzzle02: {
-    skip: true,
-    input: 'input.txt',
-    target: 0
+    target1: 0,
+    target2: 0
   }
 }.each do |name, pars|
   # skip run?
@@ -28,15 +25,24 @@ PUZZLE = 0
   end
 
   # open input data and process it
-  open(pars[:input]) do |input|
-    # Read all input lines and sanitize
-    data = input.readlines.map(&:strip)
+  input = if File.exist?(run_pars[:input])
+            open(run_pars[:input]) do |file|
+              # Read all input lines and sanitize
+              file.readlines.map(&:strip)
+            end
+          else
+            # use input parameter directly
+            run_pars[:input]
+          end
 
-    # Process data
-    res = 0
+  # Process data
+  res1 = 0
+  res2 = 0
 
-    # Print result
-    success_msg = res == pars[:target] ? 'succeeded' : 'failed'
-    puts "AOC17-#{PUZZLE}/#{name} #{success_msg}: #{res} (Target: #{pars[:target]})"
-  end
+  # Print result
+  success_msg1 = res1 == run_pars[:target1] ? 'succeeded' : 'failed'
+  success_msg2 = res2 == run_pars[:target2] ? 'succeeded' : 'failed'
+  puts "AOC17-#{PUZZLE}/#{run_name}1 #{success_msg1}: #{res1} (Target: #{run_pars[:target1]})"
+  puts "AOC17-#{PUZZLE}/#{run_name}2 #{success_msg2}: #{res2} (Target: #{run_pars[:target2]})"
+  puts '=' * 50
 end
