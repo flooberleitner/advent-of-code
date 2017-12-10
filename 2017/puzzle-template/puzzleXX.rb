@@ -17,10 +17,10 @@ PUZZLE = 0
     target1: 0,
     target2: 0
   }
-}.each do |name, pars|
+}.each do |run_name, run_pars|
   # skip run?
-  if pars[:skip]
-    puts "Skipped '#{name}'"
+  if run_pars[:skip]
+    puts "Skipped '#{run_name}'"
     next
   end
 
