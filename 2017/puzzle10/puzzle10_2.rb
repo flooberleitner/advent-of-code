@@ -7,13 +7,14 @@ class Array
     skip_size = 0
     rounds.times do
       sizes.each do |size|
-        sub = dup.slice(0, size)
-        dup.replace(sub.reverse + dup[size..-1])
-        dup.rotate!(size + skip_size)
-        rotate_cnt += size + skip_size
+        dup.replace(dup.shift(size).reverse + dup)
+        steps = size + skip_size
+        dup.rotate!(steps)
+        rotate_cnt += steps
         skip_size += 1
       end
     end
+    # last we rotate the hash back to start position
     dup.rotate!(-rotate_cnt)
   end
 
