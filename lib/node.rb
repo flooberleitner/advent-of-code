@@ -43,4 +43,16 @@ class Node
   def balanced?
     @children.map(&:weight).uniq.size <= 1
   end
+
+  def collect_self_and_children(collection: nil)
+    if collection
+      return if collection.include? self
+      collection << self
+    else
+      collection = [self]
+    end
+
+    @children.each { |c| c.collect_self_and_children(collection: collection) }
+    collection
+  end
 end
