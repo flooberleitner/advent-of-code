@@ -4,7 +4,6 @@ require_relative '../../lib/knot_hash'
 
 # Declare the number of the AOC17 puzzle
 PUZZLE = 10
-POSTFIX_KEY = [17, 31, 73, 47, 23].map(&:chr).join.freeze
 
 # Declare all runs to be done for this puzzle
 {
@@ -40,7 +39,7 @@ POSTFIX_KEY = [17, 31, 73, 47, 23].map(&:chr).join.freeze
     next
   end
 
-  res = (run_pars[:sizes] + POSTFIX_KEY).knot_hash
+  res = run_pars[:sizes].knot_hash
 
   # Print result
   success_msg = res == run_pars[:target] ? 'succeeded' : 'failed'
