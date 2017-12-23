@@ -37,13 +37,6 @@ PUZZLE = 17
     insertion_max: 2017,
     index_for: 2017,
     target: 926
-  },
-  puzzle02: {
-    skip: true,
-    step_size: 394,
-    insertion_max: 50_000_000,
-    index_for: 0,
-    target: 0
   }
 }.each do |run_name, run_pars|
   # skip run?
