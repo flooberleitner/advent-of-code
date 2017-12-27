@@ -7,7 +7,7 @@ require 'thread'
 PUZZLE = 18
 # Declare all runs to be done for this puzzle
 {
-  test: {
+  test02: {
     skip: false,
     input: 'input_test2.txt',
     target: 3
@@ -39,21 +39,10 @@ PUZZLE = 18
   emu0 = DuetEmulator.new(name: 'Emu0', source: input, queue_in: queues[0], queue_out: queues[1])
   emu1 = DuetEmulator.new(name: 'Emu1', source: input, queue_in: queues[1], queue_out: queues[0])
 
-  threads = []
-  threads << Thread.new do
-    emu0.execute
-  end
-
-  threads << Thread.new do
-    emu1.execute(reg_init: { p: 1 })
-  end
-
-  # wait till both threads are waiting on their queues
-  # TODO: Nicer solution would be for the threads to hash this out with
-  #       each other and then exit when they detect their deadlock.
-  sleep(0.01) while queues.any? { |q| !q.empty? } || queues.all? { |q| q.num_waiting.zero? }
-  # Kill off each thread now that they're idle and exit
-  threads.each(&:exit)
+  [
+    Thread.new { emu0.execute },
+    Thread.new { emu1.execute(reg_init: { p: 1 }) }
+  ].each(&:join)
 
   res = emu1.cmd_exec_count[:snd]
 

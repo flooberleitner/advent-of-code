@@ -38,6 +38,8 @@ class DuetEmulator
     end
 
     case reason
+    when :finish
+      0
     when :recover
       last_freq
     when :pc_out_of_range
@@ -163,8 +165,7 @@ class DuetEmulator
   private def rcv(args)
     incr_cmd_exec_count(:rcv)
     if @duet_mode
-      # data = fetch_data_from_partner
-      data = @queue_in.pop
+      data = receive_data_from_partner
       @regs[args[0]] = data
     else
       throw(:abort_execution, :recover) unless get_data_from(args[0]).zero?
@@ -193,5 +194,32 @@ class DuetEmulator
   # Send data to the partner
   private def send_data_to_partner(data)
     @queue_out << data
+  end
+
+  ##
+  # Receive data from partner
+  # Also handle abort conditions
+  private def receive_data_from_partner
+    # If there is data in the queue -> grab it and return
+    return @queue_in.pop unless @queue_in.empty?
+
+    # If the out queue is empty and the partner is waiting
+    # -> Close queue to signal abort to partner and finish execution
+    if @queue_out.empty? && @queue_out.num_waiting > 0
+      @queue_out.close
+      throw(:abort_execution, :finish)
+    end
+
+    # wait for data
+    data = @queue_in.pop
+
+    # handle if queue_in was closed by partner
+    if data.nil?
+      raise "#{@name}: queue_in popped nil but not closed" unless @queue_in.closed?
+      throw(:abort_execution, :finish)
+    end
+
+    # everything fine -> return data
+    data
   end
 end
